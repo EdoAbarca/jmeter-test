@@ -25,6 +25,15 @@ jobs:
           wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.2.zip
           unzip apache-jmeter-5.6.2.zip
           echo "$PWD/apache-jmeter-5.6.2/bin" >> $GITHUB_PATH
+      
+      - name: Create results directory
+        run: mkdir -p results
+      
+      #- name: Copy JMeter Test Plan
+      #  run: cp test_rendimiento.jmx apache-jmeter-5.6.2/bin/
+      
+      - name: Create report directory
+        run: mkdir -p results/report
 
       - name: Run JMeter Test
         run: |
