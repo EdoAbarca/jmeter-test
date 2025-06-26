@@ -8,7 +8,7 @@ on:
 
 jobs:
   performance-test:
-    runs-on: ubuntu-latest  # También puedes usar windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -17,27 +17,32 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
-          java-version: '17'  # JMeter requiere Java 8+
+          java-version: '17'
           distribution: 'temurin'
 
-      - name: Download JMeter
+      - name: Cache JMeter download
+        uses: actions/cache@v3
+        id: cache-jmeter
+        with:
+          path: apache-jmeter-5.6.2
+          key: ${{ runner.os }}-jmeter-5.6.2
+
+      - name: Download JMeter (if not cached)
+        if: steps.cache-jmeter.outputs.cache-hit != 'true'
         run: |
-          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.2.zip
-          unzip apache-jmeter-5.6.2.zip
+          wget --no-check-certificate https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.2.zip
+          unzip -q apache-jmeter-5.6.2.zip
           echo "$PWD/apache-jmeter-5.6.2/bin" >> $GITHUB_PATH
       
-      - name: Create results directory
-        run: mkdir -p results
-      
-      #- name: Copy JMeter Test Plan
-      #  run: cp test_rendimiento.jmx apache-jmeter-5.6.2/bin/
-      
-      - name: Create report directory
-        run: mkdir -p results/report
+      - name: Create directories
+        run: |
+          mkdir -p results
+          mkdir -p results/report
 
       - name: Run JMeter Test
         run: |
           jmeter -n -t test_rendimiento.jmx -l results/result.jtl -e -o results/report
+        timeout-minutes: 30  # Adjust based on expected test duration
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
